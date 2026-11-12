@@ -1,0 +1,36 @@
+name: Naukri UI tests
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NAUKRI_USERNAME: ${{ secrets.NAUKRI_USERNAME }}
+      NAUKRI_PASSWORD: ${{ secrets.NAUKRI_PASSWORD }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+      - name: Run scenarios in parallel
+        run: python run_tests.py --parallel --processes 2
+      - name: Upload execution artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: naukri-test-artifacts
+          path: |
+            reports/
+            logs/
+            snapshots/
+          if-no-files-found: warn
